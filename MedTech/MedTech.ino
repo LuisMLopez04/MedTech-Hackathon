@@ -123,12 +123,15 @@ int getInput(String prompt){
   while (!validInput) {
     Serial.println(prompt);
 
+    delay(1)
     while (Serial.available() > 0) {
     Serial.read();
     }
+
     while(Serial.available() == 0);
 
     tempValue = Serial.parseInt();
+    Serial.peek();
     Serial.println(String(tempValue));
   
     Serial.println("Are you sure this " + String(tempValue) + " is correct? (Y/N/Q)");
@@ -151,11 +154,13 @@ int getValidatedInput(String prompt, int minVal, int maxVal) {
   while (!validInput) {
     Serial.println(prompt);
 
+    delay(1)
     while (Serial.available() > 0) {
     Serial.read();
     }
     while(Serial.available() == 0);
 
+    Serial.peek();
     tempValue = Serial.parseInt();
     Serial.println(String(tempValue));
 
