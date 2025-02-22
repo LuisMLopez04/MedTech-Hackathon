@@ -16,13 +16,13 @@ bool doctorConfirmation = false;
 bool valueConfirmation = false;
 bool quitProgram = false;
 
-int fentanylSevereDuration = 0;
-int fentanylMildDuration = 0;
+int fentanylSevereDuration = 2000;
+int fentanylMildDuration = 2000;
 
-int morphineSevereDuration = 0;
-int morphineMildDuration = 0;
+int morphineSevereDuration = 2000;
+int morphineMildDuration = 2000;
 
-const int fentanylPin = 5;
+const int fentanylPin = 12;
 const int morphinePin = 8;
 
 bool administered = false;
@@ -83,7 +83,7 @@ void loop() {
     Serial.println("Program terminated by doctor.");
     return;
   }
-\
+
   outPutPastValue(nociceptorValue, heartRateValue, oxygenSaturation, severityScore, administeredDrug);
   
   if (millis() - lastClockUpdate >= 1000) {
@@ -260,30 +260,27 @@ bool checkPassword() {
 
   Serial.println("Please enter the password to continue:");
 
-  delay(1)
+  delay(1);
   while (Serial.available() > 0) {
     Serial.read();  
   }
 
   while (true) {
-    // Wait for the user to input the password and press Enter
-    enteredPassword = Serial.readString();  // Reads the entire input as a string
 
-    // Remove any leading or trailing whitespace/newlines
+    while (Serial.available() == 0);
+    enteredPassword = Serial.readString();
+
     enteredPassword.trim();
 
-    // Check if the entered password matches the expected one
     if (enteredPassword == password) {
-      return true;  // Correct password entered
+      return true;
     } else {
-      // Incorrect password, prompt user to try again
       Serial.println("Incorrect password. Please try again.");
     }
 
-    // If the user wants to quit, allow them to exit
     if (enteredPassword == "Q" || enteredPassword == "q") {
       quitProgram = true;
-      return false;  // Exit if user wants to quit
+      return false; 
     }
   }
 }
