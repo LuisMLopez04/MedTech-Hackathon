@@ -30,6 +30,8 @@ String administeredDrug = "No medicine";
 unsigned long lastAdministeredTime = 0;
 unsigned long lastClockUpdate = 0;
 
+String password = "Rex";
+
 
 void setup() {
   Serial.begin(9600);
@@ -123,7 +125,7 @@ int getInput(String prompt){
   while (!validInput) {
     Serial.println(prompt);
 
-    delay(1)
+    delay(1);
     while (Serial.available() > 0) {
     Serial.read();
     }
@@ -154,7 +156,7 @@ int getValidatedInput(String prompt, int minVal, int maxVal) {
   while (!validInput) {
     Serial.println(prompt);
 
-    delay(1)
+    delay(1);
     while (Serial.available() > 0) {
     Serial.read();
     }
@@ -181,6 +183,12 @@ int getValidatedInput(String prompt, int minVal, int maxVal) {
 }
 
 void administerDrug(String drugName, float dosage, int duration, int pin) {
+
+  if (!checkPassword()) {
+    Serial.println("Incorrect password. Access denied.");
+    return;
+  }
+
   Serial.println("Patient has a severity score of " + String(severityScore) + ". You will administer " + String(dosage) + " mg of " + drugName + ".");
 
 
@@ -247,4 +255,35 @@ String formatTime(unsigned long milliseconds) {
                       (minutes < 10 ? "0" : "") + String(minutes) + ":" +
                       (seconds < 10 ? "0" : "") + String(seconds);
   return timeString;
+}
+
+bool checkPassword() {
+  String enteredPassword = "";
+  char ch;
+  
+  Serial.println("Please enter the password to continue:");
+
+  while (true) {
+    while (Serial.available() > 0) {
+      ch = Serial.read();  
+      if (ch == '\n' || ch == '\r') {
+        break;
+      }
+      enteredPassword += ch; 
+    }
+
+    
+    if (enteredPassword == password) {
+      return true;  
+    } else {
+      
+      Serial.println("Incorrect password. Please try again.");
+      enteredPassword = "";  
+    }
+
+    if (enteredPassword == "Q" || enteredPassword == "q") {
+      quitProgram = true;
+      return false; 
+    }
+  }
 }
