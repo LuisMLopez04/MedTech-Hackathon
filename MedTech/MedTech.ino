@@ -1,6 +1,6 @@
-int nociceptorValue = 0;
-int heartRateValue = 0;
-int oxygenSaturation = 0;
+int nociceptorValue;
+int heartRateValue;
+int oxygenSaturation;
 
 float nociceptorWeight = 2.0/3;
 float heartRateWeight = 1.0/6;
@@ -119,10 +119,16 @@ void changingMeasures(){
 int getInput(String prompt){
   int tempValue;
   bool validInput = false;
+
+  while (Serial.available() > 0) {
+      Serial.read();
+  }
+
   while (!validInput) {
     Serial.println(prompt);
     while(Serial.available() == 0);
     tempValue = Serial.parseInt();
+
     while (Serial.available() > 0) {
       Serial.read();
     }
@@ -143,6 +149,12 @@ int getInput(String prompt){
 int getValidatedInput(String prompt, int minVal, int maxVal) {
   int tempValue;
   bool validInput = false;
+
+  while (Serial.available() > 0) {
+      Serial.read();
+  }
+
+
   while (!validInput) {
     Serial.println(prompt);
     while (Serial.available() == 0);
