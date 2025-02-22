@@ -32,28 +32,30 @@ unsigned long lastAdministeredTime = 0;
 unsigned long lastClockUpdate = 0;
 
 String password = "Rex";
-
+/*
 const int  rs = 9, en = 8, d4 = 7, d5 = 6, d6 = 5, d7 = 4;
 LiquidCrystal lcd (rs, en, d4, d5, d6, d7);
-
+*/
 
 void setup() {
   Serial.begin(9600);
   pinMode(fentanylPin, OUTPUT);
   pinMode(morphinePin, OUTPUT);
-  lcd.begin(16,2);
-  lcd.print("hello, world!");
+  digitalWrite(fentanylPin, LOW);
+  digitalWrite(morphinePin, LOW);
+  //lcd.begin(16,2);
+  //lcd.print("hello, world!");
 }
 
 void loop() {
-  lcd.setCursor(0,1);
-  lcd.print(millis() / 1000);
+  //lcd.setCursor(0,1);
+  //lcd.print(millis() / 1000);
   if (quitProgram) {
     Serial.println("Program terminated by doctor.");
     return;
   }
 
-  if (administered && (millis() - lastAdministeredTime < delayAmount)) {
+  /*if (administered && (millis() - lastAdministeredTime < delayAmount)) {
     Serial.println("Waiting for required delay time before next administration.");
     displayLastTimeAdministered();
     delay(1000);
@@ -61,6 +63,7 @@ void loop() {
   } else {
     administered = false;
   }
+  */
   changingMeasures();
   if (quitProgram) {
     Serial.println("Program terminated by doctor.");
@@ -239,6 +242,7 @@ bool confirmation() {
 }
 
 void motorActivity(int pin, int duration) {
+  Serial.println("MOTOR ON");
   digitalWrite(pin, HIGH);
   delay(duration);
   digitalWrite(pin, LOW);
