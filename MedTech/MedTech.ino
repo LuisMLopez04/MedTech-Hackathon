@@ -27,6 +27,8 @@ const int morphinePin = 8;
 
 bool administered = false;
 String administeredDrug = "No medicine";
+unsigned long lastAdministeredTime = 0;
+unsigned long lastClockUpdate = 0;
 
 
 void setup() {
@@ -83,11 +85,17 @@ void loop() {
     delay(delayAmount);
   }
   outPutPastValue(nociceptorValue, heartRateValue, oxygenSaturation, severityScore, administeredDrug);
-  administered = false;
+  
+  if (millis() - lastClockUpdate >= 1000) {
+    lastClockUpdate = millis();
+    displayLastTimeAdministered();
+  }
 }
 
 void severityScoreCalculator(){
-  severityScore = ((nociceptorValue * nociceptorWeight) + (heartRateValue * heartRateWeight)) + ((100 - oxygenSaturation) * oxygenSaturationWeight);
+  severityScore = ((nociceptorValue * nociceptorWeight) + 
+                  (heartRateValue * heartRateWeight)) + 
+                  ((100 - oxygenSaturation) * oxygenSaturationWeight);
 }
 
 void changingMeasures(){
@@ -116,7 +124,7 @@ int getInput(String prompt){
     while(Serial.available() == 0);
     tempValue = Serial.parseInt();
   
-    Serial.println("Are you sure this" + String(tempValue) + "is correct? (Y/N/Q)");
+    Serial.println("Are you sure this " + String(tempValue) + " is correct? (Y/N/Q)");
     valueConfirmation = confirmation();
     if (quitProgram){
       return 0;
@@ -154,10 +162,10 @@ int getValidatedInput(String prompt, int minVal, int maxVal) {
 }
 
 void administerDrug(String drugName, float dosage, int duration, int pin) {
-  Serial.println("Patient has a severity score of " + String(severityScore) + ". You will administer" + String(dosage) + " mg of " + drugName + ".");
+  Serial.println("Patient has a severity score of " + String(severityScore) + ". You will administer " + String(dosage) + " mg of " + drugName + ".");
 
 
-  Serial.println("Are you sure you want to administer " + String(dosage) + " mg of" + drugName + "? (Y/N/Q)");
+  Serial.println("Are you sure you want to administer " + String(dosage) + " mg of " + drugName + "? (Y/N/Q)");
 
   doctorConfirmation = confirmation();
   if(quitProgram){
@@ -166,8 +174,9 @@ void administerDrug(String drugName, float dosage, int duration, int pin) {
   if (doctorConfirmation) {
     Serial.println("Administering " + String(dosage) + " mg of " + drugName + "...");
     motorActivity(pin, duration);
+    administered = true;
+    lastAdministeredTime = millis();
   }
-  administered = true;
 }
 
 
@@ -196,4 +205,24 @@ void outPutPastValue(int nociceptorCurrent, int heartRateCurrent, int oxygenSatu
   Serial.println("Past oxygen saturation percentage: %" + String(oxygenSaturationCurrent));
   Serial.println("Past severity score: " + String(severityScore));
   Serial.println("Past medicine administered: " + medicineCurrent);
+}
+
+void displayLastTimeAdministered() {
+  if (administered) {
+    Serial.println("Time Since Last Dose: " + formatTime(millis() - lastAdministeredTime));
+  } else {
+    Serial.println("No medicine administered.");
+  }
+}
+
+String formatTime(unsigned long milliseconds) {
+  unsigned long totalSeconds = milliseconds / 1000;
+  int hours = (totalSeconds / 3600) % 24;
+  int minutes = (totalSeconds % 3600) / 60;
+  int seconds = totalSeconds % 60;
+
+  String timeString = (hours < 10 ? "0" : "") + String(hours) + ":" +
+                      (minutes < 10 ? "0" : "") + String(minutes) + ":" +
+                      (seconds < 10 ? "0" : "") + String(seconds);
+  return timeString;
 }
