@@ -22,16 +22,17 @@ int fentanylMildDuration = 0;
 int morphineSevereDuration = 0;
 int morphineMildDuration = 0;
 
-const int fentanylPin = 0;
-const int morphinePin = 0;
+const int fentanylPin = 5;
+const int morphinePin = 8;
 
 bool administered = false;
+String administeredDrug = "No medicine";
 
 
 void setup() {
   Serial.begin(9600);
-  pinMode(fentanylPin, OUTPUT); //replace # with actual pin number
-  pinMode(morphinePin, OUTPUT); //replace # with actual pin number
+  pinMode(fentanylPin, OUTPUT);
+  pinMode(morphinePin, OUTPUT);
 }
 
 void loop() {
@@ -49,15 +50,27 @@ void loop() {
   if (severityScore > 80.4) {
     administerDrug("Fentanyl", 0.075, fentanylSevereDuration, fentanylPin);
     delayAmount = delayAmountFentanyl;
+    if (administered) {
+      administeredDrug = "Severe Fentanyl";
+    }
   }else if (72.2 <= severityScore && severityScore <= 80.4) {
     administerDrug("Fentanyl", 0.038, fentanylMildDuration, fentanylPin);
     delayAmount = delayAmountFentanyl;
+    if (administered) {
+      administeredDrug = "Mild Fentanyl";
+    }
   }else if (60.6 <= severityScore && severityScore < 72.2 ) {
     administerDrug("Morphine", 7, morphineSevereDuration, morphinePin);
     delayAmount = delayAmountMorphine;
+    if (administered) {
+      administeredDrug = "Severe Morphine";
+    }
   }else if (40.8 <= severityScore && severityScore < 60.6) {
     administerDrug("Morphine", 3, morphineMildDuration, morphinePin);
     delayAmount = delayAmountMorphine;
+    if (administered) {
+      administeredDrug = "Mild Morphine";
+    }
   } else {
     Serial.println("You have a severity score of " + String(severityScore) + " there is no need for any medicine.");
   }
@@ -69,6 +82,8 @@ void loop() {
   if (administered) {
     delay(delayAmount);
   }
+  outPutPastValue(nociceptorValue, heartRateValue, oxygenSaturation, severityScore, administeredDrug);
+  administered = false;
 }
 
 void severityScoreCalculator(){
@@ -170,11 +185,15 @@ bool confirmation() {
 }
 
 void motorActivity(int pin, int duration) {
-  digitalWrite(#, HIGH); //replace with pin
+  digitalWrite(pin, HIGH);
   delay(duration);
-  digitalWrite(#, LOW); //replace with pin
+  digitalWrite(pin, LOW);
 }
 
-
-
-//future idea - output the current inserted values
+void outPutPastValue(int nociceptorCurrent, int heartRateCurrent, int oxygenSaturationCurrent, float severityCurrent, String medicineCurrent) {
+  Serial.println("Past Nociceptor value: " + String(nociceptorCurrent));
+  Serial.println("Past heart rate current: " + String(heartRateCurrent));
+  Serial.println("Past oxygen saturation percentage: %" + String(oxygenSaturationCurrent));
+  Serial.println("Past severity score: " + String(severityScore));
+  Serial.println("Past medicine administered: " + medicineCurrent);
+}
