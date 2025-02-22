@@ -83,9 +83,7 @@ void loop() {
     Serial.println("Program terminated by doctor.");
     return;
   }
-  if (administered) {
-    delay(delayAmount);
-  }
+\
   outPutPastValue(nociceptorValue, heartRateValue, oxygenSaturation, severityScore, administeredDrug);
   
   if (millis() - lastClockUpdate >= 1000) {
@@ -96,7 +94,7 @@ void loop() {
 
 void severityScoreCalculator(){
   severityScore = ((nociceptorValue * nociceptorWeight) + 
-                  (heartRateValue * heartRateWeight)) + 
+                  ((heartRateValue - 72) * heartRateWeight)) + 
                   ((100 - oxygenSaturation) * oxygenSaturationWeight);
 }
 
@@ -111,7 +109,7 @@ void changingMeasures(){
     return;
   }
 
-  oxygenSaturation = getInput("Oxygen saturation percentage(Enter as percentage):");
+  oxygenSaturation = getInput("Oxygen saturation percentage(Enter as number):");
   if (quitProgram) {
     return;
   }
@@ -232,7 +230,7 @@ void motorActivity(int pin, int duration) {
 void outPutPastValue(int nociceptorCurrent, int heartRateCurrent, int oxygenSaturationCurrent, float severityCurrent, String medicineCurrent) {
   Serial.println("Past Nociceptor value: " + String(nociceptorCurrent));
   Serial.println("Past heart rate current: " + String(heartRateCurrent));
-  Serial.println("Past oxygen saturation percentage: %" + String(oxygenSaturationCurrent));
+  Serial.println("Past oxygen saturation percentage: " + String(oxygenSaturationCurrent) + "%");
   Serial.println("Past severity score: " + String(severityScore));
   Serial.println("Past medicine administered: " + medicineCurrent);
 }
@@ -259,31 +257,33 @@ String formatTime(unsigned long milliseconds) {
 
 bool checkPassword() {
   String enteredPassword = "";
-  char ch;
-  
+
   Serial.println("Please enter the password to continue:");
 
+  delay(1)
+  while (Serial.available() > 0) {
+    Serial.read();  
+  }
+
   while (true) {
-    while (Serial.available() > 0) {
-      ch = Serial.read();  
-      if (ch == '\n' || ch == '\r') {
-        break;
-      }
-      enteredPassword += ch; 
-    }
+    // Wait for the user to input the password and press Enter
+    enteredPassword = Serial.readString();  // Reads the entire input as a string
 
-    
+    // Remove any leading or trailing whitespace/newlines
+    enteredPassword.trim();
+
+    // Check if the entered password matches the expected one
     if (enteredPassword == password) {
-      return true;  
+      return true;  // Correct password entered
     } else {
-      
+      // Incorrect password, prompt user to try again
       Serial.println("Incorrect password. Please try again.");
-      enteredPassword = "";  
     }
 
+    // If the user wants to quit, allow them to exit
     if (enteredPassword == "Q" || enteredPassword == "q") {
       quitProgram = true;
-      return false; 
+      return false;  // Exit if user wants to quit
     }
   }
 }
