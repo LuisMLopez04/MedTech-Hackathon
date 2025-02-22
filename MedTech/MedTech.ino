@@ -120,18 +120,18 @@ int getInput(String prompt){
   int tempValue;
   bool validInput = false;
 
-  while (Serial.available() > 0) {
-      Serial.read();
-  }
-
   while (!validInput) {
     Serial.println(prompt);
+
     while(Serial.available() == 0);
-    tempValue = Serial.parseInt();
 
     while (Serial.available() > 0) {
       Serial.read();
     }
+
+    while (Serial.available() == 0);
+    tempValue = Serial.parseInt();
+    Serial.println(String(tempValue));
   
     Serial.println("Are you sure this " + String(tempValue) + " is correct? (Y/N/Q)");
     valueConfirmation = confirmation();
@@ -150,18 +150,18 @@ int getValidatedInput(String prompt, int minVal, int maxVal) {
   int tempValue;
   bool validInput = false;
 
-  while (Serial.available() > 0) {
-      Serial.read();
-  }
-
-
   while (!validInput) {
     Serial.println(prompt);
-    while (Serial.available() == 0);
-    tempValue = Serial.parseInt();
+
+    while(Serial.available() == 0);
+
     while (Serial.available() > 0) {
       Serial.read();
     }
+
+    while (Serial.available() == 0);
+    tempValue = Serial.parseInt();
+    Serial.println(String(tempValue));
 
     if (tempValue < minVal || tempValue > maxVal) {
       Serial.println("Invalid input. Please enter a value between " + String(minVal) + " and " + String(maxVal) + ".");
