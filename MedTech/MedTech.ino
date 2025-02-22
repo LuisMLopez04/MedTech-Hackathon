@@ -123,13 +123,11 @@ int getInput(String prompt){
   while (!validInput) {
     Serial.println(prompt);
 
+    while (Serial.available() > 0) {
+    Serial.read();
+    }
     while(Serial.available() == 0);
 
-    while (Serial.available() > 0) {
-      Serial.read();
-    }
-
-    while (Serial.available() == 0);
     tempValue = Serial.parseInt();
     Serial.println(String(tempValue));
   
@@ -153,13 +151,11 @@ int getValidatedInput(String prompt, int minVal, int maxVal) {
   while (!validInput) {
     Serial.println(prompt);
 
+    while (Serial.available() > 0) {
+    Serial.read();
+    }
     while(Serial.available() == 0);
 
-    while (Serial.available() > 0) {
-      Serial.read();
-    }
-
-    while (Serial.available() == 0);
     tempValue = Serial.parseInt();
     Serial.println(String(tempValue));
 
@@ -199,6 +195,9 @@ void administerDrug(String drugName, float dosage, int duration, int pin) {
 
 
 bool confirmation() {
+  while (Serial.available() > 0) {
+    Serial.read();
+  }
   while (Serial.available() == 0);
   char confirm = Serial.read();
   if (confirm == 'Y' || confirm == 'y'){
