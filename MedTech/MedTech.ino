@@ -1,4 +1,3 @@
-#include <LiquidCrystal.h>
 int nociceptorValue;
 int heartRateValue;
 int oxygenSaturation;
@@ -23,8 +22,8 @@ int fentanylMildDuration = 2000;
 int morphineSevereDuration = 2000;
 int morphineMildDuration = 2000;
 
-const int fentanylPin = 12;
-const int morphinePin = 13;
+const int fentanylPin = 8;
+const int morphinePin = 9;
 
 bool administered = false;
 String administeredDrug = "No medicine";
@@ -32,30 +31,23 @@ unsigned long lastAdministeredTime = 0;
 unsigned long lastClockUpdate = 0;
 
 String password = "Rex";
-/*
-const int  rs = 9, en = 8, d4 = 7, d5 = 6, d6 = 5, d7 = 4;
-LiquidCrystal lcd (rs, en, d4, d5, d6, d7);
-*/
 
 void setup() {
   Serial.begin(9600);
   pinMode(fentanylPin, OUTPUT);
   pinMode(morphinePin, OUTPUT);
-  digitalWrite(fentanylPin, LOW);
-  digitalWrite(morphinePin, LOW);
-  //lcd.begin(16,2);
-  //lcd.print("hello, world!");
+
+  digitalWrite(fentanylPin, HIGH);
+  digitalWrite(morphinePin, HIGH;
 }
 
 void loop() {
-  //lcd.setCursor(0,1);
-  //lcd.print(millis() / 1000);
   if (quitProgram) {
     Serial.println("Program terminated by doctor.");
     return;
   }
 
-  /*if (administered && (millis() - lastAdministeredTime < delayAmount)) {
+  if (administered && (millis() - lastAdministeredTime < delayAmount)) {
     Serial.println("Waiting for required delay time before next administration.");
     displayLastTimeAdministered();
     delay(1000);
@@ -63,7 +55,7 @@ void loop() {
   } else {
     administered = false;
   }
-  */
+
   changingMeasures();
   if (quitProgram) {
     Serial.println("Program terminated by doctor.");
@@ -71,25 +63,25 @@ void loop() {
   }
   
   severityScoreCalculator();
-  if (severityScore > 80.4) {
+  if (severityScore > 61.67) {
     administerDrug("Fentanyl", 0.075, fentanylSevereDuration, fentanylPin);
     delayAmount = delayAmountFentanyl;
     if (administered) {
       administeredDrug = "Severe Fentanyl";
     }
-  }else if (72.2 <= severityScore && severityScore <= 80.4) {
+  }else if (54.67 <= severityScore && severityScore <= 61.67) {
     administerDrug("Fentanyl", 0.038, fentanylMildDuration, fentanylPin);
     delayAmount = delayAmountFentanyl;
     if (administered) {
       administeredDrug = "Mild Fentanyl";
     }
-  }else if (60.6 <= severityScore && severityScore < 72.2 ) {
+  }else if (46.33 <= severityScore && severityScore < 54.67 ) {
     administerDrug("Morphine", 7, morphineSevereDuration, morphinePin);
     delayAmount = delayAmountMorphine;
     if (administered) {
       administeredDrug = "Severe Morphine";
     }
-  }else if (40.8 <= severityScore && severityScore < 60.6) {
+  }else if (25.50 <= severityScore && severityScore < 46.33) {
     administerDrug("Morphine", 3, morphineMildDuration, morphinePin);
     delayAmount = delayAmountMorphine;
     if (administered) {
@@ -119,17 +111,18 @@ void severityScoreCalculator(){
 }
 
 void changingMeasures(){
+  delay(1);
   nociceptorValue = getValidatedInput("Nociceptor value (0-100):", 0, 100);
   if (quitProgram){
     return;
   }
-
+  delay(1);
   heartRateValue = getInput("Heart rate value:");
   if (quitProgram){
     return;
   }
-
-  oxygenSaturation = getInput("Oxygen saturation percentage(Enter as number):");
+  delay(1);
+  oxygenSaturation = getInput("Oxygen saturation percentage(Enter as number/integer (NOT DECIMAL)):");
   if (quitProgram) {
     return;
   }
@@ -149,6 +142,12 @@ int getInput(String prompt){
     }
 
     while(Serial.available() == 0);
+
+    if (!Serial.peek() || Serial.peek() < '0' || Serial.peek() > '9') {
+      Serial.println("Invalid input. Please enter a valid number.");
+      while (Serial.available() > 0) Serial.read();
+      continue;
+    }
 
     tempValue = Serial.parseInt();
     Serial.peek();
@@ -179,6 +178,12 @@ int getValidatedInput(String prompt, int minVal, int maxVal) {
     Serial.read();
     }
     while(Serial.available() == 0);
+
+    if (!Serial.peek() || Serial.peek() < '0' || Serial.peek() > '9') {
+      Serial.println("Invalid input. Please enter a valid number.");
+      while (Serial.available() > 0) Serial.read();
+      continue;
+    }
 
     Serial.peek();
     tempValue = Serial.parseInt();
@@ -229,20 +234,25 @@ bool confirmation() {
   while (Serial.available() > 0) {
     Serial.read();
   }
-  while (Serial.available() == 0);
-  char confirm = Serial.read();
-  if (confirm == 'Y' || confirm == 'y'){
-    return true;
-  } else if (confirm == 'Q' || confirm == 'q') {
-    quitProgram = true;
-    return false;
-  } else {
-    return false;
+  while (true) {
+    while (Serial.available() == 0);
+    char confirm = Serial.read();
+    if (confirm == 'Y' || confirm == 'y') {
+      return true;
+    } else if (confirm == 'Q' || confirm == 'q') {
+      quitProgram = true;
+      return false;
+    } else if (confirm == 'N' || confirm == 'n') {
+      return false;
+    } else {
+      Serial.println("Invalid input. Please enter Y, N, or Q.");
+      delay(1);
+      while (Serial.available() > 0) Serial.read();
+    }
   }
 }
 
 void motorActivity(int pin, int duration) {
-  Serial.println("MOTOR ON");
   digitalWrite(pin, HIGH);
   delay(duration);
   digitalWrite(pin, LOW);
