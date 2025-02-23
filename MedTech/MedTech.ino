@@ -1,3 +1,11 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+
+LiquidCrystal_I2C lcd(0x27, 16, 4);
+
+
+
 int nociceptorValue;
 int heartRateValue;
 int oxygenSaturation;
@@ -34,21 +42,27 @@ String password = "Rex";
 
 void setup() {
   Serial.begin(9600);
+
+  lcd.init();
+  lcd.backlight();
+  
+
   pinMode(fentanylPin, OUTPUT);
   pinMode(morphinePin, OUTPUT);
 
-  digitalWrite(fentanylPin, HIGH);
-  digitalWrite(morphinePin, HIGH;
+  digitalWrite(fentanylPin, LOW);
+  digitalWrite(morphinePin, LOW);
 }
 
 void loop() {
+
   if (quitProgram) {
-    Serial.println("Program terminated by doctor.");
+    printToBoth("Program terminated by doctor.");
     return;
   }
 
   if (administered && (millis() - lastAdministeredTime < delayAmount)) {
-    Serial.println("Waiting for required delay time before next administration.");
+    printToBoth("Waiting for required delay time before next administration.");
     displayLastTimeAdministered();
     delay(1000);
     return;
@@ -58,7 +72,7 @@ void loop() {
 
   changingMeasures();
   if (quitProgram) {
-    Serial.println("Program terminated by doctor.");
+    printToBoth("Program terminated by doctor.");
     return;
   }
   
@@ -88,16 +102,17 @@ void loop() {
       administeredDrug = "Mild Morphine";
     }
   } else {
-    Serial.println("You have a severity score of " + String(severityScore) + " there is no need for any medicine.");
+    printToBoth("You have a severity score of " + String(severityScore) + " there is no need for any medicine.");
   }
 
   if (quitProgram) {
-    Serial.println("Program terminated by doctor.");
+    printToBoth("Program terminated by doctor.");
     return;
   }
 
   outPutPastValue(nociceptorValue, heartRateValue, oxygenSaturation, severityScore, administeredDrug);
   
+
   if (millis() - lastClockUpdate >= 1000) {
     lastClockUpdate = millis();
     displayLastTimeAdministered();
@@ -122,7 +137,7 @@ void changingMeasures(){
     return;
   }
   delay(1);
-  oxygenSaturation = getInput("Oxygen saturation percentage(Enter as number/integer (NOT DECIMAL)):");
+  oxygenSaturation = getInput("Oxygen saturation percentage(Enter as integer):");
   if (quitProgram) {
     return;
   }
@@ -134,7 +149,7 @@ int getInput(String prompt){
   bool validInput = false;
 
   while (!validInput) {
-    Serial.println(prompt);
+    printToBoth(prompt);
 
     delay(1);
     while (Serial.available() > 0) {
@@ -144,16 +159,16 @@ int getInput(String prompt){
     while(Serial.available() == 0);
 
     if (!Serial.peek() || Serial.peek() < '0' || Serial.peek() > '9') {
-      Serial.println("Invalid input. Please enter a valid number.");
+      printToBoth("Invalid input. Please enter a valid number.");
       while (Serial.available() > 0) Serial.read();
       continue;
     }
 
     tempValue = Serial.parseInt();
     Serial.peek();
-    Serial.println(String(tempValue));
+    printToBoth(String(tempValue));
   
-    Serial.println("Are you sure this " + String(tempValue) + " is correct? (Y/N/Q)");
+    printToBoth("Are you sure this number " + String(tempValue) + " is correct? (Y/N/Q)");
     valueConfirmation = confirmation();
     if (quitProgram){
       return 0;
@@ -171,7 +186,7 @@ int getValidatedInput(String prompt, int minVal, int maxVal) {
   bool validInput = false;
 
   while (!validInput) {
-    Serial.println(prompt);
+    printToBoth(prompt);
 
     delay(1);
     while (Serial.available() > 0) {
@@ -180,19 +195,19 @@ int getValidatedInput(String prompt, int minVal, int maxVal) {
     while(Serial.available() == 0);
 
     if (!Serial.peek() || Serial.peek() < '0' || Serial.peek() > '9') {
-      Serial.println("Invalid input. Please enter a valid number.");
+      printToBoth("Invalid input. Please enter a valid number.");
       while (Serial.available() > 0) Serial.read();
       continue;
     }
 
     Serial.peek();
     tempValue = Serial.parseInt();
-    Serial.println(String(tempValue));
+    printToBoth(String(tempValue));
 
     if (tempValue < minVal || tempValue > maxVal) {
-      Serial.println("Invalid input. Please enter a value between " + String(minVal) + " and " + String(maxVal) + ".");
+      printToBoth("Invalid input. Please enter a value between " + String(minVal) + " and " + String(maxVal) + ".");
     } else {
-      Serial.println("Are you sure this " + String(tempValue) + " is correct? (Y/N/Q)");
+      printToBoth("Are you sure this number " + String(tempValue) + " is correct? (Y/N/Q)");
       valueConfirmation = confirmation();
       if (quitProgram){
         return 0;
@@ -208,21 +223,21 @@ int getValidatedInput(String prompt, int minVal, int maxVal) {
 void administerDrug(String drugName, float dosage, int duration, int pin) {
 
   if (!checkPassword()) {
-    Serial.println("Incorrect password. Access denied.");
+    printToBoth("Incorrect password. Access denied.");
     return;
   }
 
-  Serial.println("Patient has a severity score of " + String(severityScore) + ". You will administer " + String(dosage) + " mg of " + drugName + ".");
+  printToBoth("Patient has a severity score of " + String(severityScore) + ". You will administer " + String(dosage) + " mg of " + drugName + ".");
 
 
-  Serial.println("Are you sure you want to administer " + String(dosage) + " mg of " + drugName + "? (Y/N/Q)");
+  printToBoth("Are you sure you want to administer " + String(dosage) + " mg of " + drugName + "? (Y/N/Q)");
 
   doctorConfirmation = confirmation();
   if(quitProgram){
     return;
   }
   if (doctorConfirmation) {
-    Serial.println("Administering " + String(dosage) + " mg of " + drugName + "...");
+    printToBoth("Administering " + String(dosage) + " mg of " + drugName + "...");
     motorActivity(pin, duration);
     administered = true;
     lastAdministeredTime = millis();
@@ -245,7 +260,7 @@ bool confirmation() {
     } else if (confirm == 'N' || confirm == 'n') {
       return false;
     } else {
-      Serial.println("Invalid input. Please enter Y, N, or Q.");
+      printToBoth("Invalid input. Please enter Y, N, or Q.");
       delay(1);
       while (Serial.available() > 0) Serial.read();
     }
@@ -259,18 +274,23 @@ void motorActivity(int pin, int duration) {
 }
 
 void outPutPastValue(int nociceptorCurrent, int heartRateCurrent, int oxygenSaturationCurrent, float severityCurrent, String medicineCurrent) {
-  Serial.println("Past Nociceptor value: " + String(nociceptorCurrent));
-  Serial.println("Past heart rate current: " + String(heartRateCurrent));
-  Serial.println("Past oxygen saturation percentage: " + String(oxygenSaturationCurrent) + "%");
-  Serial.println("Past severity score: " + String(severityScore));
-  Serial.println("Past medicine administered: " + medicineCurrent);
+  printToBoth("Past Nociceptor value: " + String(nociceptorCurrent));
+  delay(2000);
+  printToBoth("Past heart rate current: " + String(heartRateCurrent));
+  delay(2000);
+  printToBoth("Past oxygen saturation percentage: " + String(oxygenSaturationCurrent) + "%");
+  delay(2000);
+  printToBoth("Past severity score: " + String(severityScore));
+  delay(2000);
+  printToBoth("Past medicine administered: " + medicineCurrent);
+  delay(2000);
 }
 
 void displayLastTimeAdministered() {
   if (administered) {
-    Serial.println("Time Since Last Dose: " + formatTime(millis() - lastAdministeredTime));
+    printToBoth("Time Since Last Dose: " + formatTime(millis() - lastAdministeredTime));
   } else {
-    Serial.println("No medicine administered.");
+    printToBoth("No medicine administered.");
   }
 }
 
@@ -289,7 +309,7 @@ String formatTime(unsigned long milliseconds) {
 bool checkPassword() {
   String enteredPassword = "";
 
-  Serial.println("Please enter the password to continue:");
+  printToBoth("Please enter the password to continue:");
 
   delay(1);
   while (Serial.available() > 0) {
@@ -306,12 +326,34 @@ bool checkPassword() {
     if (enteredPassword == password) {
       return true;
     } else {
-      Serial.println("Incorrect password. Please try again.");
+      printToBoth("Incorrect password. Please try again.");
     }
 
     if (enteredPassword == "Q" || enteredPassword == "q") {
       quitProgram = true;
       return false; 
     }
+  }
+}
+
+void printToBoth(String message) {
+  Serial.println(message);
+
+  lcd.clear();
+  int messageLength = message.length();
+  int row = 0;
+  int col = 0;
+
+  for (int i = 0; i < messageLength; i++) {
+    if (col == 16) {
+      col = 0;
+      row++;
+      if (row == 4) {
+        break;
+      }
+      lcd.setCursor(col, row);
+    }
+    lcd.print(message.charAt(i));
+    col++;
   }
 }
