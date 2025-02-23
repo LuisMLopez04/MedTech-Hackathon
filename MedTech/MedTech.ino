@@ -25,10 +25,10 @@ bool valueConfirmation = false;
 bool quitProgram = false;
 
 int fentanylSevereDuration = 2000;
-int fentanylMildDuration = 2000;
+int fentanylMildDuration = 1000;
 
-int morphineSevereDuration = 2000;
-int morphineMildDuration = 2000;
+int morphineSevereDuration = 4000;
+int morphineMildDuration = 3000;
 
 const int fentanylPin = 8;
 const int morphinePin = 9;
